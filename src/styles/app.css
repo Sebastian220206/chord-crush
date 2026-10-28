@@ -391,12 +391,9 @@ body {
   border-color: var(--success);
 }
 
-/* -------------------------------------------------------------- main menu portal */
+/* -------------------------------------------------------------- celestial stage */
 
-/*
- * The menu is a full-viewport stage over the cosmic musical portal artwork.
- */
-.main-menu {
+.main-menu--celestial {
   position: fixed;
   inset: 0;
   z-index: 1;
@@ -404,444 +401,591 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px 18px;
+  padding: 10px 16px 12px;
   overflow-y: auto;
   overflow-x: hidden;
-  background:
-    radial-gradient(ellipse 90% 60% at 50% 45%, rgba(255, 209, 102, 0.1) 0%, rgba(15, 7, 34, 0.4) 60%, rgba(10, 5, 24, 0.95) 100%),
-    linear-gradient(180deg, rgba(12, 6, 28, 0.55) 0%, rgba(15, 7, 34, 0.25) 50%, rgba(10, 4, 22, 0.88) 100%),
-    url('/landing-hero.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background: #090314;
 }
 
-/*
- * Floating notes behind the content.
- */
-.main-menu__bg {
-  position: absolute;
+/* Fullscreen dynamic space canvas (swirling galaxy, nebulae, stars) */
+.celestial-canvas {
+  position: fixed;
   inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   z-index: 0;
-  overflow: hidden;
 }
 
-.main-menu__note {
-  position: absolute;
-  opacity: 0.28;
-  filter: drop-shadow(0 0 8px currentColor);
-  animation: note-float 8s ease-in-out infinite;
+/* Musical action notification toast */
+.celestial-toast {
+  position: fixed;
+  top: 68px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  padding: 8px 18px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #120826;
+  background: linear-gradient(135deg, #fff2be, #ffd166 60%, #7be0d0 100%);
+  border: 1.5px solid #ffffff;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 0 20px rgba(255, 209, 102, 0.7);
+  animation: toast-drop 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.main-menu__note--1 { left: 8%;  top: 18%; font-size: 38px; color: var(--note-c); animation-delay: 0s; }
-.main-menu__note--2 { left: 86%; top: 14%; font-size: 32px; color: var(--note-g); animation-delay: 1.4s; }
-.main-menu__note--3 { left: 12%; top: 76%; font-size: 26px; color: var(--note-a); animation-delay: 2.8s; }
-.main-menu__note--4 { left: 84%; top: 72%; font-size: 42px; color: var(--note-f); animation-delay: 4.2s; }
-.main-menu__note--5 { left: 48%; top: 8%;  font-size: 24px; color: var(--note-e); animation-delay: 5.6s; }
-.main-menu__note--6 { left: 24%; top: 86%; font-size: 30px; color: var(--note-d); animation-delay: 7s; }
-
-@keyframes note-float {
-  0%, 100% { transform: translateY(0) rotate(-6deg); }
-  50%      { transform: translateY(-16px) rotate(6deg); }
+@keyframes toast-drop {
+  from { opacity: 0; transform: translate(-50%, -10px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
 }
 
-/* ---------------------------------------------------- Portal Center Stage */
+/* ------------------------------------------------ Main Panoramic Stage */
 
-.portal-stage {
+.celestial-stage {
   position: relative;
-  z-index: 1;
+  z-index: 2;
+  width: 100%;
+  max-width: 1260px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: 240px 1fr 240px;
+  align-items: center;
+  justify-items: center;
+  gap: 16px;
+  padding: 10px 0;
+}
+
+.stage-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.element-label {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  color: var(--accent-bright);
+  text-shadow: 0 0 8px rgba(255, 209, 102, 0.8);
+  white-space: nowrap;
+}
+
+/* --- Left: Cosmic Maestro & Instruments --- */
+
+.conductor-aura {
+  position: relative;
+  width: 160px;
+  height: 80px;
+  margin-bottom: -40px;
+  pointer-events: none;
+}
+
+.conductor-ribbon-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.stardust-trail {
+  animation: stardust-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes stardust-glow {
+  0%   { stroke-dashoffset: 0; filter: drop-shadow(0 0 4px #7be0d0); }
+  100% { stroke-dashoffset: 40; filter: drop-shadow(0 0 12px #ff4fd8); }
+}
+
+.cosmic-conductor-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 180ms ease;
+  padding: 6px;
+  border-radius: var(--radius);
+}
+
+.cosmic-conductor-btn:hover {
+  transform: translateY(-4px) scale(1.04);
+  filter: drop-shadow(0 0 20px rgba(123, 224, 208, 0.8));
+}
+
+.cosmic-conductor-btn:active {
+  transform: scale(0.96);
+}
+
+.maestro-svg {
+  width: 120px;
+  height: 170px;
+  overflow: visible;
+  filter: drop-shadow(0 0 14px rgba(74, 158, 255, 0.5));
+}
+
+.wand-sparkle {
+  animation: sparkle-pulse 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes sparkle-pulse {
+  0%   { r: 2.5; fill: #ffd166; filter: drop-shadow(0 0 4px #ffd166); }
+  100% { r: 6.5; fill: #ffffff; filter: drop-shadow(0 0 14px #ffffff); }
+}
+
+.left-instrument-cluster {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 180px;
+}
+
+.instrument-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(26, 14, 52, 0.75);
+  border: 1.5px solid rgba(255, 209, 102, 0.45);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  color: var(--text);
+  backdrop-filter: blur(8px);
+  transition: all 140ms ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.instrument-chip:hover {
+  transform: translateX(4px);
+  border-color: var(--accent-bright);
+  background: rgba(45, 25, 90, 0.88);
+  box-shadow: 0 0 16px rgba(255, 209, 102, 0.5);
+}
+
+.instrument-chip:active {
+  transform: scale(0.96);
+}
+
+.instrument-chip__icon {
+  font-size: 18px;
+}
+
+.instrument-chip__name {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  color: var(--accent-bright);
+}
+
+/* --- Center: The Grand Musical Portal --- */
+
+.portal-centerpiece {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 620px;
-  margin: auto;
-  padding: 10px 0;
+  max-width: 580px;
 }
 
-/* Luminous cosmic arch portal frame */
-.portal-arch {
+.arch-monument {
   position: relative;
   width: 100%;
-  max-width: 520px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arch-svg {
+  width: 100%;
+  max-height: 520px;
+  overflow: visible;
+  filter: drop-shadow(0 0 35px rgba(255, 209, 102, 0.35));
+}
+
+.portal-staff-line {
+  filter: drop-shadow(0 0 8px rgba(255, 209, 102, 0.5));
+}
+
+.crystal-cluster polygon {
+  transition: filter 200ms ease;
+  filter: drop-shadow(0 0 12px currentColor);
+}
+
+.crystal-cluster:hover polygon {
+  filter: drop-shadow(0 0 24px #ff4fd8);
+}
+
+/* Interior: nestled inside the arch */
+.portal-interior {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 38px 24px 30px;
-  background: radial-gradient(
-    ellipse 85% 75% at 50% 45%,
-    rgba(32, 22, 68, 0.72) 0%,
-    rgba(20, 11, 46, 0.88) 65%,
-    rgba(14, 7, 34, 0.96) 100%
-  );
-  border: 3px solid rgba(255, 209, 102, 0.75);
-  border-bottom: 2px solid rgba(123, 224, 208, 0.6);
-  border-radius: 260px 260px 48px 48px;
-  box-shadow:
-    0 0 50px rgba(255, 209, 102, 0.35),
-    0 0 100px rgba(123, 224, 208, 0.25),
-    inset 0 0 45px rgba(255, 209, 102, 0.2),
-    inset 0 0 20px rgba(199, 146, 234, 0.3);
-  backdrop-filter: blur(10px);
-  animation: portal-breathe 4s ease-in-out infinite alternate;
-}
-
-@keyframes portal-breathe {
-  0% {
-    box-shadow:
-      0 0 40px rgba(255, 209, 102, 0.3),
-      0 0 80px rgba(123, 224, 208, 0.2),
-      inset 0 0 35px rgba(255, 209, 102, 0.15);
-  }
-  100% {
-    box-shadow:
-      0 0 65px rgba(255, 209, 102, 0.45),
-      0 0 120px rgba(123, 224, 208, 0.35),
-      inset 0 0 55px rgba(255, 209, 102, 0.28);
-  }
-}
-
-/* Luminous outer ring layer */
-.portal-arch::before {
-  content: '';
-  position: absolute;
-  inset: -12px;
-  border: 1.5px dashed rgba(255, 209, 102, 0.45);
-  border-radius: 272px 272px 60px 60px;
+  justify-content: center;
+  padding: 60px 30px 40px;
+  text-align: center;
   pointer-events: none;
-  animation: ring-pulse 6s ease-in-out infinite alternate;
 }
 
-@keyframes ring-pulse {
-  0% { opacity: 0.4; transform: scale(0.995); }
-  100% { opacity: 0.85; transform: scale(1.008); }
+.portal-interior > * {
+  pointer-events: auto;
 }
 
-/* --- Golden 3D Portal Title --- */
-
-.portal-title-wrap {
+/* 3D Golden Logo Typography */
+.chord-crush-logo-3d {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-bottom: 22px;
-  text-align: center;
 }
 
-.portal-title {
-  margin: 0;
+.logo-line-chord {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  font-family: var(--font-display);
-  line-height: 0.95;
-  text-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.8),
-    0 0 30px rgba(255, 209, 102, 0.45);
+  gap: 4px;
 }
 
-.portal-title__top {
-  position: relative;
-  font-size: clamp(48px, 12vw, 78px);
+.logo-chord-text {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 6.8vw, 76px);
   font-weight: 900;
   letter-spacing: 2px;
-  background: linear-gradient(180deg, #ffffff 0%, #ffdf78 40%, #ffb326 75%, #bf6c00 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #ffe38a 40%, #ffb833 70%, #b36b00 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 2px 0 #5b3500) drop-shadow(0 0 20px rgba(255, 209, 102, 0.6));
+  filter: drop-shadow(0 3px 0 #542f00) drop-shadow(0 0 24px rgba(255, 209, 102, 0.7));
 }
 
-.portal-title__heart {
-  display: inline-block;
-  margin-left: 6px;
-  font-size: 0.55em;
-  color: #ff6b9d;
-  vertical-align: middle;
-  filter: drop-shadow(0 0 10px #ff6b9d);
-  animation: heart-glow 2s ease-in-out infinite alternate;
+.logo-heart-gem {
+  font-size: clamp(28px, 4vw, 42px);
+  color: #ff5287;
+  filter: drop-shadow(0 0 14px #ff5287);
+  animation: heart-beat 1.8s ease-in-out infinite alternate;
 }
 
-@keyframes heart-glow {
-  0% { transform: scale(0.92); filter: drop-shadow(0 0 6px #ff6b9d); }
-  100% { transform: scale(1.12); filter: drop-shadow(0 0 16px #ff457f); }
+@keyframes heart-beat {
+  0%   { transform: scale(0.92); }
+  100% { transform: scale(1.16); filter: drop-shadow(0 0 22px #ff2a6d); }
 }
 
-.portal-title__bottom {
-  font-size: clamp(44px, 11vw, 70px);
+.logo-line-crush {
+  margin-top: -12px;
+}
+
+.logo-crush-text {
+  font-family: var(--font-display);
+  font-size: clamp(44px, 6.2vw, 68px);
   font-weight: 900;
-  letter-spacing: 3px;
-  background: linear-gradient(180deg, #ffffff 0%, #ffd166 45%, #fca311 80%, #9e4700 100%);
+  letter-spacing: 4px;
+  background: linear-gradient(180deg, #ffffff 0%, #ffd166 45%, #fca311 75%, #9e4700 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 2px 0 #4f2700) drop-shadow(0 0 22px rgba(255, 209, 102, 0.55));
+  filter: drop-shadow(0 3px 0 #4a2400) drop-shadow(0 0 24px rgba(255, 209, 102, 0.65));
 }
 
-.portal-subtitle {
+.logo-tagline {
   margin: 6px 0 0;
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
+  letter-spacing: 2.2px;
   color: var(--accent-bright);
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
 }
 
-/* --- Portal Button Actions (Matching Artwork) --- */
-
-.portal-actions {
+/* Ornate Gemstone Buttons */
+.portal-buttons-stack {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 12px;
   width: 100%;
-  max-width: 320px;
+  max-width: 310px;
 }
 
-.portal-btn {
+.ornate-gem-btn {
+  position: relative;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 14px 24px;
+  padding: 13px 24px;
   font-family: var(--font-display);
+  font-size: 15px;
   font-weight: 900;
   letter-spacing: 2px;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: all 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
   text-transform: uppercase;
+  transition: all 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* START ADVENTURE: Gold pill with inner jewel glow */
-.portal-btn--primary {
-  font-size: 16px;
+.ornate-gem-btn--primary {
   color: #120826;
-  background: linear-gradient(180deg, #fff2be 0%, #ffd166 48%, #e5a72e 80%, #be7c00 100%);
-  border: 2px solid #fff5cc;
+  background: linear-gradient(180deg, #fff5d6 0%, #ffd166 45%, #e5a72e 80%, #be7c00 100%);
+  border: 2.5px solid #fff5cc;
   box-shadow:
-    0 0 22px rgba(255, 209, 102, 0.65),
-    0 8px 24px rgba(0, 0, 0, 0.5),
+    0 0 26px rgba(255, 209, 102, 0.75),
+    0 8px 24px rgba(0, 0, 0, 0.6),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-.portal-btn--primary:hover {
-  transform: translateY(-2px) scale(1.02);
-  background: linear-gradient(180deg, #ffffff 0%, #ffe08a 48%, #f0b43c 100%);
+.ornate-gem-btn--primary:hover {
+  transform: translateY(-2px) scale(1.03);
+  background: linear-gradient(180deg, #ffffff 0%, #ffe399 45%, #f2b744 100%);
   box-shadow:
-    0 0 34px rgba(255, 209, 102, 0.85),
-    0 12px 30px rgba(0, 0, 0, 0.55);
+    0 0 38px rgba(255, 209, 102, 0.95),
+    0 12px 30px rgba(0, 0, 0, 0.7);
 }
 
-.portal-btn--primary:active {
-  transform: translateY(1px) scale(0.98);
+.ornate-gem-btn--primary:active {
+  transform: translateY(1px) scale(0.97);
 }
 
-.portal-btn__gem {
+.gem-ruby {
   width: 8px;
   height: 8px;
-  background: #ff5287;
   border-radius: 50%;
-  box-shadow: 0 0 8px #ff5287;
+  background: #ff3366;
+  box-shadow: 0 0 8px #ff3366, 0 0 14px #ff3366;
 }
 
-/* LEARN MORE: Deep indigo glass pill with gold edge */
-.portal-btn--secondary {
+.ornate-gem-btn--secondary {
   font-size: 13px;
   color: var(--accent-bright);
-  background: linear-gradient(180deg, rgba(58, 42, 106, 0.85) 0%, rgba(32, 21, 64, 0.95) 100%);
-  border: 1.5px solid rgba(255, 209, 102, 0.6);
+  background: linear-gradient(180deg, rgba(46, 28, 92, 0.88) 0%, rgba(22, 12, 48, 0.96) 100%);
+  border: 1.5px solid rgba(255, 209, 102, 0.65);
   box-shadow:
-    0 6px 18px rgba(0, 0, 0, 0.4),
-    inset 0 0 12px rgba(255, 209, 102, 0.15);
+    0 6px 18px rgba(0, 0, 0, 0.5),
+    inset 0 0 14px rgba(255, 209, 102, 0.15);
   backdrop-filter: blur(8px);
 }
 
-.portal-btn--secondary:hover {
+.ornate-gem-btn--secondary:hover {
   transform: translateY(-2px);
   color: #ffffff;
-  border-color: var(--accent-bright);
-  background: linear-gradient(180deg, rgba(74, 54, 134, 0.92) 0%, rgba(44, 29, 88, 0.98) 100%);
+  border-color: #ffffff;
+  background: linear-gradient(180deg, rgba(65, 42, 128, 0.95) 0%, rgba(32, 18, 70, 0.98) 100%);
   box-shadow:
-    0 0 20px rgba(255, 209, 102, 0.4),
-    0 8px 22px rgba(0, 0, 0, 0.45);
+    0 0 24px rgba(255, 209, 102, 0.5),
+    0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
-.portal-btn--secondary:active {
-  transform: translateY(1px) scale(0.98);
+.ornate-gem-btn--secondary:active {
+  transform: translateY(1px) scale(0.97);
 }
 
-/* --- Embedded 7-Note Scale Keyboard in Portal --- */
+/* --- Right: Floating Islands & Speaker Tree --- */
 
-.portal-synth {
+.floating-islands-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  align-items: center;
+}
+
+.sky-island {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  width: 100%;
-}
-
-.portal-synth__label {
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  color: var(--note-a);
-  text-shadow: 0 0 10px rgba(123, 224, 208, 0.6);
-}
-
-.portal-synth__keys {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.portal-synth__key {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 900;
-  color: #ffffff;
-  background: rgba(24, 15, 52, 0.85);
-  border: 2px solid var(--accent);
-  box-shadow: 0 0 10px rgba(255, 209, 102, 0.35);
+  background: transparent;
+  border: none;
   cursor: pointer;
-  transition: transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1), background-color 120ms ease,
-    box-shadow 120ms ease;
+  transition: transform 180ms ease, filter 180ms ease;
+  animation: island-bob 4.5s ease-in-out infinite alternate;
 }
 
-.portal-synth__key--c { border-color: var(--note-c); color: var(--note-c); }
-.portal-synth__key--d { border-color: var(--note-d); color: var(--note-d); }
-.portal-synth__key--e { border-color: var(--note-e); color: var(--note-e); }
-.portal-synth__key--f { border-color: var(--note-f); color: var(--note-f); }
-.portal-synth__key--g { border-color: var(--note-g); color: var(--note-g); }
-.portal-synth__key--a { border-color: var(--note-a); color: var(--note-a); }
-.portal-synth__key--b { border-color: var(--note-b); color: var(--note-b); }
-
-.portal-synth__key:hover,
-.portal-synth__key--active {
-  transform: translateY(-3px) scale(1.15);
-  background: var(--accent);
-  color: #120826;
-  box-shadow: 0 0 18px var(--accent);
+.sky-island--synth {
+  animation-delay: -2.2s;
 }
 
-/* --- Floating Campaign Deck & Stats --- */
-
-.portal-footer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  margin-top: 14px;
-  width: 100%;
+@keyframes island-bob {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-8px); }
 }
 
-.portal-quick-links {
+.sky-island:hover {
+  filter: drop-shadow(0 0 16px rgba(255, 209, 102, 0.8));
+}
+
+.island-rock {
+  width: 72px;
+  height: 48px;
+  background: radial-gradient(ellipse at 50% 30%, #5d4037, #3e2723 70%, #1b0000 100%);
+  border: 1.5px solid #8d6e63;
+  border-radius: 36px 36px 14px 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.7);
 }
 
-.portal-chip-btn {
+.island-instrument {
+  font-size: 24px;
+}
+
+.island-tag {
+  margin-top: 3px;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  background: rgba(18, 8, 36, 0.8);
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 209, 102, 0.35);
+}
+
+.speaker-tree-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 180ms ease, filter 180ms ease;
+  padding: 6px;
+  border-radius: var(--radius);
+}
+
+.speaker-tree-btn:hover {
+  transform: translateY(-4px) scale(1.04);
+  filter: drop-shadow(0 0 20px rgba(255, 209, 102, 0.75));
+}
+
+.speaker-tree-btn:active {
+  transform: scale(0.96);
+}
+
+.tree-svg {
+  width: 120px;
+  height: 170px;
+  overflow: visible;
+  filter: drop-shadow(0 0 16px rgba(78, 52, 46, 0.6));
+}
+
+/* --- Bottom Campaign Hub Dock --- */
+
+.celestial-dock {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  max-width: 980px;
+  margin-top: 4px;
+}
+
+.celestial-dock__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 18px;
+  background: rgba(18, 8, 38, 0.85);
+  border: 1px solid rgba(255, 209, 102, 0.3);
+  border-radius: var(--radius-pill);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.celestial-chip-btn {
   padding: 6px 14px;
   font-family: var(--font-display);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.5px;
-  color: var(--text);
-  background: rgba(26, 16, 56, 0.8);
-  border: 1px solid rgba(255, 209, 102, 0.4);
+  color: #120826;
+  background: linear-gradient(180deg, #fff2be, #ffd166);
+  border: 1px solid #ffffff;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  backdrop-filter: blur(8px);
   transition: all 140ms ease;
+  white-space: nowrap;
 }
 
-.portal-chip-btn:hover {
-  color: var(--accent-bright);
-  border-color: var(--accent-bright);
-  background: rgba(45, 28, 96, 0.9);
+.celestial-chip-btn:hover {
   transform: translateY(-1px);
+  box-shadow: 0 0 14px rgba(255, 209, 102, 0.7);
 }
 
-.portal-stats-bar {
+.celestial-stats {
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  width: 100%;
-  max-width: 380px;
-  padding: 8px 16px;
-  background: rgba(18, 10, 40, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
-  backdrop-filter: blur(10px);
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
-.portal-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-}
-
-.portal-stat__value {
+.stat-pill {
   font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--accent);
-}
-
-.portal-stat__label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  color: var(--muted);
-}
-
-.portal-stat-divider {
-  width: 1px;
-  height: 22px;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.portal-campaign-status {
-  margin: 0;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
   color: var(--accent-bright);
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
 }
 
-@media (max-height: 680px) {
-  .portal-arch {
-    padding: 24px 18px 20px;
+.stat-pill--current {
+  color: var(--success);
+}
+
+/* --- Responsive Adaptations --- */
+
+@media (max-width: 960px) {
+  .celestial-stage {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
-  .portal-title__top {
-    font-size: clamp(38px, 9vw, 56px);
+  .stage-side {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
   }
-  .portal-title__bottom {
-    font-size: clamp(34px, 8vw, 50px);
-  }
-  .portal-btn {
-    padding: 10px 18px;
-  }
-  .portal-synth {
+  .conductor-aura {
     display: none;
+  }
+  .left-instrument-cluster {
+    flex-direction: row;
+    max-width: none;
+    justify-content: center;
+  }
+  .floating-islands-group {
+    flex-direction: row;
+    justify-content: center;
+  }
+  .celestial-dock__inner {
+    flex-direction: column;
+    gap: 8px;
+    border-radius: var(--radius);
+  }
+}
+
+@media (max-width: 480px) {
+  .arch-svg {
+    max-height: 400px;
+  }
+  .logo-chord-text {
+    font-size: 44px;
+  }
+  .logo-crush-text {
+    font-size: 38px;
+  }
+  .ornate-gem-btn {
+    padding: 10px 18px;
+    font-size: 13px;
   }
 }
 
