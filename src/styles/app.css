@@ -391,10 +391,10 @@ body {
   border-color: var(--success);
 }
 
-/* -------------------------------------------------------------- main menu */
+/* -------------------------------------------------------------- main menu portal */
 
 /*
- * The menu is a full-viewport stage over the cosmic concert artwork.
+ * The menu is a full-viewport stage over the cosmic musical portal artwork.
  */
 .main-menu {
   position: fixed;
@@ -404,24 +404,20 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px 20px;
+  padding: 14px 18px 18px;
   overflow-y: auto;
+  overflow-x: hidden;
   background:
-    radial-gradient(85% 55% at 50% 28%, rgba(255, 209, 102, 0.12) 0%, rgba(255, 209, 102, 0) 62%),
-    radial-gradient(70% 50% at 20% 80%, rgba(199, 146, 234, 0.15) 0%, transparent 65%),
-    radial-gradient(70% 50% at 82% 75%, rgba(74, 158, 255, 0.14) 0%, transparent 65%),
-    linear-gradient(180deg, rgba(15, 7, 34, 0.72) 0%, rgba(22, 11, 48, 0.58) 45%, rgba(12, 6, 28, 0.9) 100%),
-    url('/background-map.png');
+    radial-gradient(ellipse 90% 60% at 50% 45%, rgba(255, 209, 102, 0.1) 0%, rgba(15, 7, 34, 0.4) 60%, rgba(10, 5, 24, 0.95) 100%),
+    linear-gradient(180deg, rgba(12, 6, 28, 0.55) 0%, rgba(15, 7, 34, 0.25) 50%, rgba(10, 4, 22, 0.88) 100%),
+    url('/landing-hero.jpg');
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
 }
 
 /*
  * Floating notes behind the content.
- *
- * Pure CSS: six spans on keyframe loops, tinted from the chord-voice tokens so
- * the decoration is literally the game's palette. They sit behind everything
- * and never compete with the buttons.
  */
 .main-menu__bg {
   position: absolute;
@@ -433,23 +429,26 @@ body {
 
 .main-menu__note {
   position: absolute;
-  opacity: 0.2;
-  animation: note-float 9s ease-in-out infinite;
+  opacity: 0.28;
+  filter: drop-shadow(0 0 8px currentColor);
+  animation: note-float 8s ease-in-out infinite;
 }
 
-.main-menu__note--1 { left: 8%;  top: 18%; font-size: 42px; color: var(--note-c); animation-delay: 0s; }
-.main-menu__note--2 { left: 82%; top: 14%; font-size: 32px; color: var(--note-g); animation-delay: 1.4s; }
-.main-menu__note--3 { left: 14%; top: 72%; font-size: 28px; color: var(--note-a); animation-delay: 2.8s; }
-.main-menu__note--4 { left: 78%; top: 68%; font-size: 48px; color: var(--note-f); animation-delay: 4.2s; }
-.main-menu__note--5 { left: 50%; top: 10%; font-size: 24px; color: var(--note-e); animation-delay: 5.6s; }
-.main-menu__note--6 { left: 30%; top: 86%; font-size: 34px; color: var(--note-d); animation-delay: 7s; }
+.main-menu__note--1 { left: 8%;  top: 18%; font-size: 38px; color: var(--note-c); animation-delay: 0s; }
+.main-menu__note--2 { left: 86%; top: 14%; font-size: 32px; color: var(--note-g); animation-delay: 1.4s; }
+.main-menu__note--3 { left: 12%; top: 76%; font-size: 26px; color: var(--note-a); animation-delay: 2.8s; }
+.main-menu__note--4 { left: 84%; top: 72%; font-size: 42px; color: var(--note-f); animation-delay: 4.2s; }
+.main-menu__note--5 { left: 48%; top: 8%;  font-size: 24px; color: var(--note-e); animation-delay: 5.6s; }
+.main-menu__note--6 { left: 24%; top: 86%; font-size: 30px; color: var(--note-d); animation-delay: 7s; }
 
 @keyframes note-float {
   0%, 100% { transform: translateY(0) rotate(-6deg); }
   50%      { transform: translateY(-16px) rotate(6deg); }
 }
 
-.main-menu__content {
+/* ---------------------------------------------------- Portal Center Stage */
+
+.portal-stage {
   position: relative;
   z-index: 1;
   display: flex;
@@ -457,296 +456,391 @@ body {
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 500px;
-  gap: 18px;
+  max-width: 620px;
   margin: auto;
-  padding: 12px 0;
-  text-align: center;
+  padding: 10px 0;
 }
 
-/* --- hero: kicker, title, tagline --- */
-
-.main-menu__hero {
+/* Luminous cosmic arch portal frame */
+.portal-arch {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  animation: rise 500ms ease both;
+  padding: 38px 24px 30px;
+  background: radial-gradient(
+    ellipse 85% 75% at 50% 45%,
+    rgba(32, 22, 68, 0.72) 0%,
+    rgba(20, 11, 46, 0.88) 65%,
+    rgba(14, 7, 34, 0.96) 100%
+  );
+  border: 3px solid rgba(255, 209, 102, 0.75);
+  border-bottom: 2px solid rgba(123, 224, 208, 0.6);
+  border-radius: 260px 260px 48px 48px;
+  box-shadow:
+    0 0 50px rgba(255, 209, 102, 0.35),
+    0 0 100px rgba(123, 224, 208, 0.25),
+    inset 0 0 45px rgba(255, 209, 102, 0.2),
+    inset 0 0 20px rgba(199, 146, 234, 0.3);
+  backdrop-filter: blur(10px);
+  animation: portal-breathe 4s ease-in-out infinite alternate;
 }
 
-.main-menu__kicker {
-  margin: 0;
-  padding: 4px 14px;
-  font-family: var(--font-display);
-  font-size: calc(11px * var(--ui-scale));
-  font-weight: 800;
-  letter-spacing: 3.5px;
-  color: var(--accent-bright);
-  background: rgba(255, 209, 102, 0.12);
-  border: 1px solid rgba(255, 209, 102, 0.3);
-  border-radius: var(--radius-pill);
+@keyframes portal-breathe {
+  0% {
+    box-shadow:
+      0 0 40px rgba(255, 209, 102, 0.3),
+      0 0 80px rgba(123, 224, 208, 0.2),
+      inset 0 0 35px rgba(255, 209, 102, 0.15);
+  }
+  100% {
+    box-shadow:
+      0 0 65px rgba(255, 209, 102, 0.45),
+      0 0 120px rgba(123, 224, 208, 0.35),
+      inset 0 0 55px rgba(255, 209, 102, 0.28);
+  }
 }
 
-.main-menu__title {
+/* Luminous outer ring layer */
+.portal-arch::before {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border: 1.5px dashed rgba(255, 209, 102, 0.45);
+  border-radius: 272px 272px 60px 60px;
+  pointer-events: none;
+  animation: ring-pulse 6s ease-in-out infinite alternate;
+}
+
+@keyframes ring-pulse {
+  0% { opacity: 0.4; transform: scale(0.995); }
+  100% { opacity: 0.85; transform: scale(1.008); }
+}
+
+/* --- Golden 3D Portal Title --- */
+
+.portal-title-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+.portal-title {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  align-items: center;
   font-family: var(--font-display);
-  font-size: clamp(44px, 11vw, 74px);
-  line-height: 0.92;
+  line-height: 0.95;
+  text-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(255, 209, 102, 0.45);
+}
+
+.portal-title__top {
+  position: relative;
+  font-size: clamp(48px, 12vw, 78px);
   font-weight: 900;
-  letter-spacing: 6px;
-  text-indent: 6px;
-}
-
-.main-menu__title-line {
-  display: block;
-  color: var(--text);
-  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), 0 0 26px rgba(255, 255, 255, 0.16);
-}
-
-/* CHORD: gold gradient fill; drop-shadow because text-shadow would paint
- * through a clipped background. */
-.main-menu__title-line--chord {
-  background-image: linear-gradient(180deg, #fff5d6 0%, var(--accent) 55%, #e2a83e 100%);
+  letter-spacing: 2px;
+  background: linear-gradient(180deg, #ffffff 0%, #ffdf78 40%, #ffb326 75%, #bf6c00 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 18px rgba(255, 209, 102, 0.4));
+  filter: drop-shadow(0 2px 0 #5b3500) drop-shadow(0 0 20px rgba(255, 209, 102, 0.6));
 }
 
-/* The little note riding the wordmark: teal (note A), the magic accent. */
-.main-menu__title-note {
-  font-size: 0.4em;
-  color: var(--note-a);
-  vertical-align: super;
+.portal-title__heart {
+  display: inline-block;
   margin-left: 6px;
-  letter-spacing: 0;
-  filter: drop-shadow(0 0 10px rgba(123, 224, 208, 0.6));
+  font-size: 0.55em;
+  color: #ff6b9d;
+  vertical-align: middle;
+  filter: drop-shadow(0 0 10px #ff6b9d);
+  animation: heart-glow 2s ease-in-out infinite alternate;
 }
 
-.main-menu__tagline {
-  margin: 2px 0 0;
+@keyframes heart-glow {
+  0% { transform: scale(0.92); filter: drop-shadow(0 0 6px #ff6b9d); }
+  100% { transform: scale(1.12); filter: drop-shadow(0 0 16px #ff457f); }
+}
+
+.portal-title__bottom {
+  font-size: clamp(44px, 11vw, 70px);
+  font-weight: 900;
+  letter-spacing: 3px;
+  background: linear-gradient(180deg, #ffffff 0%, #ffd166 45%, #fca311 80%, #9e4700 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 0 #4f2700) drop-shadow(0 0 22px rgba(255, 209, 102, 0.55));
+}
+
+.portal-subtitle {
+  margin: 6px 0 0;
   font-family: var(--font-display);
-  font-size: calc(13px * var(--ui-scale));
+  font-size: 13px;
   font-weight: 800;
-  letter-spacing: var(--letter-spacing-wide);
-  color: var(--accent);
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--accent-bright);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
 }
 
-/* --- interactive 7-note preview strip on hero --- */
+/* --- Portal Button Actions (Matching Artwork) --- */
 
-.hero-piano-strip {
+.portal-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.portal-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 24px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: 2px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  text-transform: uppercase;
+}
+
+/* START ADVENTURE: Gold pill with inner jewel glow */
+.portal-btn--primary {
+  font-size: 16px;
+  color: #120826;
+  background: linear-gradient(180deg, #fff2be 0%, #ffd166 48%, #e5a72e 80%, #be7c00 100%);
+  border: 2px solid #fff5cc;
+  box-shadow:
+    0 0 22px rgba(255, 209, 102, 0.65),
+    0 8px 24px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.portal-btn--primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  background: linear-gradient(180deg, #ffffff 0%, #ffe08a 48%, #f0b43c 100%);
+  box-shadow:
+    0 0 34px rgba(255, 209, 102, 0.85),
+    0 12px 30px rgba(0, 0, 0, 0.55);
+}
+
+.portal-btn--primary:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.portal-btn__gem {
+  width: 8px;
+  height: 8px;
+  background: #ff5287;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #ff5287;
+}
+
+/* LEARN MORE: Deep indigo glass pill with gold edge */
+.portal-btn--secondary {
+  font-size: 13px;
+  color: var(--accent-bright);
+  background: linear-gradient(180deg, rgba(58, 42, 106, 0.85) 0%, rgba(32, 21, 64, 0.95) 100%);
+  border: 1.5px solid rgba(255, 209, 102, 0.6);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.4),
+    inset 0 0 12px rgba(255, 209, 102, 0.15);
+  backdrop-filter: blur(8px);
+}
+
+.portal-btn--secondary:hover {
+  transform: translateY(-2px);
+  color: #ffffff;
+  border-color: var(--accent-bright);
+  background: linear-gradient(180deg, rgba(74, 54, 134, 0.92) 0%, rgba(44, 29, 88, 0.98) 100%);
+  box-shadow:
+    0 0 20px rgba(255, 209, 102, 0.4),
+    0 8px 22px rgba(0, 0, 0, 0.45);
+}
+
+.portal-btn--secondary:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* --- Embedded 7-Note Scale Keyboard in Portal --- */
+
+.portal-synth {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  margin-top: 6px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  width: 100%;
 }
 
-.hero-piano-strip__keys {
+.portal-synth__label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--note-a);
+  text-shadow: 0 0 10px rgba(123, 224, 208, 0.6);
+}
+
+.portal-synth__keys {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: rgba(18, 10, 42, 0.68);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: var(--radius-pill);
-  backdrop-filter: blur(8px);
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-.hero-note-pill {
-  width: 36px;
-  height: 36px;
+.portal-synth__key {
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 900;
   color: #ffffff;
-  background: rgba(35, 25, 74, 0.9);
-  border: 2px solid var(--pill-color, var(--accent));
-  box-shadow: 0 0 12px color-mix(in srgb, var(--pill-color, #ffd166) 45%, transparent);
+  background: rgba(24, 15, 52, 0.85);
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 10px rgba(255, 209, 102, 0.35);
   cursor: pointer;
   transition: transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1), background-color 120ms ease,
     box-shadow 120ms ease;
 }
 
-.hero-note-pill:hover,
-.hero-note-pill--active {
-  transform: translateY(-3px) scale(1.1);
-  background: var(--pill-color, var(--accent));
-  color: #0f0722;
-  box-shadow: 0 0 20px var(--pill-color, var(--accent));
+.portal-synth__key--c { border-color: var(--note-c); color: var(--note-c); }
+.portal-synth__key--d { border-color: var(--note-d); color: var(--note-d); }
+.portal-synth__key--e { border-color: var(--note-e); color: var(--note-e); }
+.portal-synth__key--f { border-color: var(--note-f); color: var(--note-f); }
+.portal-synth__key--g { border-color: var(--note-g); color: var(--note-g); }
+.portal-synth__key--a { border-color: var(--note-a); color: var(--note-a); }
+.portal-synth__key--b { border-color: var(--note-b); color: var(--note-b); }
+
+.portal-synth__key:hover,
+.portal-synth__key--active {
+  transform: translateY(-3px) scale(1.15);
+  background: var(--accent);
+  color: #120826;
+  box-shadow: 0 0 18px var(--accent);
 }
 
-.hero-piano-strip__hint {
-  margin: 0;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  color: var(--muted);
-}
+/* --- Floating Campaign Deck & Stats --- */
 
-/* --- actions --- */
-
-.main-menu__actions {
+.portal-footer {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  width: 100%;
-  max-width: 380px;
-  animation: rise 380ms ease 140ms both;
-}
-
-/*
- * The hero CTA doubles as the continue card: what it says (CONTINUE, the level,
- * the best score) comes from the real campaign snapshot. Dark text on gold for
- * contrast; the gradient and glow carry the "premium" weight.
- */
-.menu-button--hero {
-  display: inline-flex;
-  flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 16px 22px 15px;
-  background-image: linear-gradient(180deg, var(--accent-bright) 0%, var(--accent) 55%, #eab54e 100%);
-  border-radius: 16px;
-  box-shadow: var(--glow-gold), var(--shadow);
-  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
-}
-
-.menu-button--hero:hover {
-  background-color: var(--accent);
-  transform: translateY(-2px);
-  filter: brightness(1.05);
-  box-shadow: 0 0 32px rgba(255, 209, 102, 0.55), var(--shadow);
-}
-
-.menu-button--hero:active {
-  transform: translateY(0) scale(0.98);
-  filter: brightness(0.97);
-}
-
-.menu-button__kicker {
-  font-size: calc(11px * var(--ui-scale));
-  font-weight: 800;
-  letter-spacing: 3px;
-  color: rgba(15, 7, 34, 0.72);
-}
-
-.menu-button__headline {
-  font-size: calc(19px * var(--ui-scale));
-  font-weight: 900;
-  letter-spacing: 2px;
-  color: var(--bg);
-}
-
-.menu-button__sub {
-  font-size: calc(12px * var(--ui-scale));
-  font-weight: 700;
-  letter-spacing: 1.8px;
-  color: rgba(15, 7, 34, 0.72);
-}
-
-.main-menu__secondary {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 10px;
+  margin-top: 14px;
   width: 100%;
 }
 
-/* Quiet glass pair for everything that is not the one action. */
-.menu-button--secondary {
-  padding: 12px 10px;
-  font-size: calc(12px * var(--ui-scale));
-  color: var(--text);
-  background-color: rgba(35, 25, 74, 0.78);
-  border-color: rgba(165, 157, 196, 0.4);
-  backdrop-filter: blur(8px);
+.portal-quick-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-/* Staggered entrance: each secondary button a beat after the hero block. */
-.main-menu__secondary .menu-button:nth-child(1) { animation: rise 380ms ease 220ms both; }
-.main-menu__secondary .menu-button:nth-child(2) { animation: rise 380ms ease 280ms both; }
-.main-menu__secondary .menu-button:nth-child(3) { animation: rise 380ms ease 340ms both; }
-.main-menu__secondary .menu-button:nth-child(4) { animation: rise 380ms ease 400ms both; }
+.portal-chip-btn {
+  padding: 6px 14px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--text);
+  background: rgba(26, 16, 56, 0.8);
+  border: 1px solid rgba(255, 209, 102, 0.4);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 140ms ease;
+}
 
-/* --- progression stats ribbon --- */
+.portal-chip-btn:hover {
+  color: var(--accent-bright);
+  border-color: var(--accent-bright);
+  background: rgba(45, 28, 96, 0.9);
+  transform: translateY(-1px);
+}
 
-.main-menu__stats-bar {
+.portal-stats-bar {
   display: flex;
   align-items: center;
   justify-content: space-around;
   width: 100%;
   max-width: 380px;
-  padding: 12px 16px;
-  background: rgba(24, 15, 52, 0.76);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 16px;
+  background: rgba(18, 10, 40, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
   backdrop-filter: blur(10px);
-  animation: rise 380ms ease 440ms both;
 }
 
-.main-menu__stat {
+.portal-stat {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
 }
 
-.main-menu__stat-value {
+.portal-stat__value {
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   color: var(--accent);
 }
 
-.main-menu__stat-label {
-  font-size: 10px;
+.portal-stat__label {
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 1.5px;
   color: var(--muted);
 }
 
-.main-menu__stat-divider {
+.portal-stat-divider {
   width: 1px;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.12);
+  height: 22px;
+  background: rgba(255, 255, 255, 0.15);
 }
 
-/* --- progression footer: real campaign facts only --- */
-
-.main-menu__status {
+.portal-campaign-status {
   margin: 0;
-  font-size: calc(11px * var(--ui-scale));
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 2.5px;
-  color: var(--muted);
-  animation: rise 380ms ease 480ms both;
+  letter-spacing: 1.5px;
+  color: var(--accent-bright);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
 }
 
-@keyframes rise {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Short landscape phones: tighten the stage instead of scrolling blindly. */
-@media (max-height: 620px) {
-  .main-menu__content {
-    gap: 10px;
+@media (max-height: 680px) {
+  .portal-arch {
+    padding: 24px 18px 20px;
   }
-
-  .main-menu__title {
-    font-size: clamp(32px, 8vh, 50px);
+  .portal-title__top {
+    font-size: clamp(38px, 9vw, 56px);
   }
-
-  .menu-button--hero {
-    padding: 10px 20px 9px;
+  .portal-title__bottom {
+    font-size: clamp(34px, 8vw, 50px);
   }
-
-  .hero-piano-strip {
+  .portal-btn {
+    padding: 10px 18px;
+  }
+  .portal-synth {
     display: none;
   }
 }
