@@ -1187,52 +1187,94 @@ body {
 
 /* ================= The Valley World & SVG Road ================= */
 
-.valley-world-container {
+.valley-map-screen--minimal {
+  background: linear-gradient(180deg, #fef8f0 0%, #faeee0 50%, #f5e4d2 100%);
+}
+
+/* ================= Minimal Campaign Trail Stage (Only Glowing Path & Nodes) ================= */
+
+.minimal-trail-container {
   position: relative;
   width: 100%;
-  max-width: 1100px;
+  max-width: 680px;
   margin: 0 auto;
   flex: 1;
-  min-height: 580px;
+  min-height: 540px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.valley-scene-svg {
+.trail-svg-stage {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  min-height: 580px;
-  display: block;
+  overflow: visible;
+  pointer-events: none;
 }
 
-/* ================= Level Nodes Layer ================= */
+/* Radiant glowing path animation along unlocked/completed levels */
+.glowing-path-bloom {
+  animation: trail-bloom 2.4s ease-in-out infinite alternate;
+}
 
-.valley-nodes-layer {
+@keyframes trail-bloom {
+  0% {
+    stroke: rgba(255, 179, 0, 0.35);
+    stroke-width: 6;
+  }
+  100% {
+    stroke: rgba(255, 143, 0, 0.65);
+    stroke-width: 9;
+  }
+}
+
+.glowing-path-core {
+  filter: drop-shadow(0 0 6px #ffb300);
+}
+
+.glowing-path-shimmer {
+  animation: path-shimmer 2.2s linear infinite;
+}
+
+@keyframes path-shimmer {
+  0%   { stroke-dashoffset: 0; opacity: 0.6; }
+  50%  { opacity: 1; }
+  100% { stroke-dashoffset: -24; opacity: 0.6; }
+}
+
+/* ================= 6 Minimal Level Nodes ================= */
+
+.minimal-nodes-layer {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-.valley-node {
+.trail-node {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 58px;
-  height: 58px;
+  width: 60px;
+  height: 60px;
   padding: 0;
   background: none;
   border: none;
   cursor: pointer;
   pointer-events: auto;
   transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.valley-node:hover {
+.trail-node:hover {
   transform: translate(-50%, -54%) scale(1.12);
   z-index: 10;
 }
 
-.valley-node__disc {
+.trail-node__disc {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1242,126 +1284,127 @@ body {
   font-family: var(--font-display);
   font-size: 22px;
   font-weight: 900;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 18px rgba(93, 64, 55, 0.25), inset 0 2px 0 rgba(255, 255, 255, 0.8);
   transition: all 160ms ease;
 }
 
-/* Unlocked Node: Radiant Gold */
-.valley-node--unlocked .valley-node__disc {
-  color: #3e2723;
-  background: linear-gradient(180deg, #fff9c4 0%, #ffd54f 60%, #ff8f00 100%);
-  border: 3.5px solid #ffffff;
-}
-
-/* Completed Node: Emerald / Mint Gloss */
-.valley-node--completed .valley-node__disc {
+/* Completed Level: Rich Emerald Gloss */
+.trail-node--completed .trail-node__disc {
   color: #ffffff;
-  background: linear-gradient(180deg, #a5d6a7 0%, #43a047 60%, #1b5e20 100%);
+  background: linear-gradient(180deg, #81c784 0%, #388e3c 60%, #1b5e20 100%);
   border: 3.5px solid #ffffff;
+  box-shadow: 0 0 16px rgba(76, 175, 80, 0.5), 0 8px 18px rgba(0, 0, 0, 0.2);
 }
 
-/* Locked Node: Slate stone */
-.valley-node--locked .valley-node__disc {
+/* Unlocked Level: Radiant Gold */
+.trail-node--unlocked .trail-node__disc {
+  color: #4e342e;
+  background: linear-gradient(180deg, #fff9c4 0%, #ffd54f 55%, #ff8f00 100%);
+  border: 3.5px solid #ffffff;
+  box-shadow: 0 0 16px rgba(255, 179, 0, 0.5), 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+/* Locked Level: Slate Pebble */
+.trail-node--locked .trail-node__disc {
   color: #90a4ae;
-  background: linear-gradient(180deg, #cfd8dc 0%, #90a4ae 70%, #546e7a 100%);
+  background: linear-gradient(180deg, #eceff1 0%, #cfd8dc 60%, #90a4ae 100%);
   border: 3px solid #b0bec5;
-  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
 }
 
-/* Frontier current node pulse */
-.valley-node--current .valley-node__disc {
-  animation: node-pulse-sunny 2s ease-in-out infinite;
+/* Active Frontier Pulsing Ring */
+.trail-node--current .trail-node__disc {
+  animation: frontier-beacon 2s ease-in-out infinite;
 }
 
-@keyframes node-pulse-sunny {
+@keyframes frontier-beacon {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(255, 179, 0, 0.7), 0 6px 14px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 0 0 0 rgba(255, 179, 0, 0.8), 0 8px 18px rgba(0, 0, 0, 0.25);
   }
   50% {
-    box-shadow: 0 0 0 12px rgba(255, 179, 0, 0), 0 8px 18px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 0 0 14px rgba(255, 179, 0, 0), 0 10px 22px rgba(0, 0, 0, 0.35);
   }
 }
 
-.valley-node--selected .valley-node__disc {
+.trail-node--selected .trail-node__disc {
   border-color: #ffd600;
-  box-shadow: 0 0 20px #ffd600, 0 6px 16px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 0 24px #ffd600, 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
-.valley-node__num {
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+.trail-node__num {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
-.valley-node__lock-icon {
+.trail-node__lock {
   font-size: 20px;
 }
 
-.valley-node__check {
+.trail-node__check {
   position: absolute;
   top: -4px;
   right: -4px;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: #ffd600;
   color: #3e2723;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1.5px solid #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
-.valley-node__stars-badge {
-  position: absolute;
-  top: -14px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 1px 6px;
-  font-size: 10px;
-  color: #ffd600;
-  background: #3e2723;
-  border: 1px solid #ffd600;
-  border-radius: var(--radius-pill);
-  white-space: nowrap;
-}
-
-.valley-node__play-badge {
+.trail-node__stars {
   position: absolute;
   top: -16px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 2px 8px;
+  padding: 1px 8px;
+  font-size: 10px;
+  color: #ffd600;
+  background: #3e2723;
+  border: 1.5px solid #ffd600;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.trail-node__play-tag {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 10px;
+  font-family: var(--font-display);
   font-size: 9px;
   font-weight: 900;
-  letter-spacing: 1.2px;
+  letter-spacing: 1.5px;
   color: #ffffff;
   background: linear-gradient(180deg, #ff4081, #c2185b);
+  border: 1.5px solid #ffffff;
   border-radius: var(--radius-pill);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   animation: play-bounce 1.4s ease-in-out infinite;
 }
 
-@keyframes play-bounce {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50%      { transform: translateX(-50%) translateY(-3px); }
-}
-
-.valley-node__tooltip {
+.trail-node__label {
   position: absolute;
-  bottom: -20px;
+  bottom: -22px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 2px 8px;
+  padding: 2px 10px;
   font-family: var(--font-display);
   font-size: 10px;
   font-weight: 800;
-  color: #ffffff;
-  background: rgba(46, 30, 20, 0.85);
+  color: #4e342e;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ffd54f;
   border-radius: var(--radius-pill);
   white-space: nowrap;
   pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 /* ================= Level Detail Sheet Modal ================= */
