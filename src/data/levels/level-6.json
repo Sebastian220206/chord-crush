@@ -1,0 +1,10 @@
+{
+  "id": 6,
+  "name": "Cascade Master",
+  "description": "Master the power of cascades.",
+  "boardWidth": 8,
+  "boardHeight": 8,
+  "moveLimit": 28,
+  "scoreTarget": 6000,
+  "minimumCascadeTarget": 3
+}

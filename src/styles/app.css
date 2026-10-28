@@ -1,0 +1,2070 @@
+/*
+ * Chord Crush UI design system.
+ *
+ * One place decides what the shell looks like. The palette is not invented: it is
+ * the canvas HUD's own identity — the dark indigo panels and the gold accent the
+ * Phaser scene already draws, plus the note-tile colors from GameScene (C blue,
+ * D green, E gold, F pink, G purple, A teal, B orange), which double as chord
+ * quality accents wherever the shell wants a musical color.
+ *
+ * Every screen reads these tokens instead of naming a color, so changing the
+ * identity is editing the token block, not hunting through rules.
+ *
+ * The map screen is laid out with grid and flexbox only; nothing depends on a
+ * fixed desktop width. Media queries never exceed 960px or 720px.
+ *
+ * All sizes that should make the UI bigger or smaller for a player hang off
+ * --ui-scale, so a future settings dial is one variable, not a redesign.
+ */
+
+:root {
+  /* --- the musical midnight palette (matches the Phaser HUD) --- */
+  --bg: #0f0722;               /* deepest dark, behind everything */
+  --bg-raised: #1a1038;        /* the Phaser clear color; canvas backdrop */
+  --panel: #23194a;            /* card surfaces */
+  --panel-raised: #2f235c;     /* hover / raised surfaces */
+  --panel-line: #443678;       /* hairlines and quiet borders */
+  --text: #ffffff;
+  --muted: #a59dc4;
+
+  /* --- accents --- */
+  --accent: #ffd166;           /* gold: the game's own primary accent */
+  --accent-bright: #ffe399;
+  --accent-soft: rgba(255, 209, 102, 0.16);
+
+  --success: #7be0d0;          /* teal (note A) */
+  --danger: #ff8fab;           /* pink (note F) */
+
+  /* --- chord voices, from the note tiles in GameScene --- */
+  --note-c: #4a9eff;
+  --note-d: #5ad19a;
+  --note-e: #ffd166;
+  --note-f: #ff8fab;
+  --note-g: #c792ea;
+  --note-a: #7be0d0;
+  --note-b: #ffa45c;
+
+  /* --- glass surfaces (backdrop-blur cards and sheets) --- */
+  --glass-bg: rgba(38, 26, 78, 0.72);
+  --glass-bg-hover: rgba(48, 34, 96, 0.88);
+  --glass-border: rgba(165, 157, 196, 0.45);
+  --glass-border-hover: rgba(255, 209, 102, 0.85);
+
+  /* --- typography --- */
+  --font-display: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Segoe UI', Arial, Helvetica, sans-serif;
+  --font-size-xs: 12px;   /* eyebrows, section labels */
+  --font-size-sm: 13px;
+  --font-size-md: 15px;   /* body copy */
+  --font-size-lg: 17px;   /* buttons */
+  --font-size-xl: 22px;   /* sheet titles */
+
+  --letter-spacing-tight: 0.5px;
+  --letter-spacing-label: 2px;
+  --letter-spacing-wide: 3px;
+  --letter-spacing-eyebrow: 3.5px;
+
+  /* --- spacing (the shell rhythm) --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 22px;
+
+  /* --- shape --- */
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-pill: 999px;
+  --radius-node: 50%;
+
+  /* --- elevation --- */
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.48);
+  --shadow-deep: 0 16px 42px rgba(0, 0, 0, 0.58);
+  --focus-ring: 0 0 0 3px rgba(255, 209, 102, 0.75);
+
+  /* --- glow language (musical light, used sparingly) --- */
+  --glow-gold: 0 0 24px rgba(255, 209, 102, 0.38);
+  --glow-teal: 0 0 18px rgba(123, 224, 208, 0.6);
+
+  /* --- z layers --- */
+  --z-shade: 20;
+  --z-modal: 50;
+  --z-error: 60;
+
+  /* --- UI scale: every font size below multiplies this --- */
+  --ui-scale: 1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+/* -------------------------------------------------------------- app shell */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: 100%;
+  padding: var(--space-4);
+}
+
+/*
+ * On the level map the shell gets out of the way: no padding and no centering,
+ * so the map background reaches the viewport edges. Content breathing room
+ * lives on .level-map itself instead.
+ */
+.app--level-map {
+  padding: 0;
+  align-items: stretch;
+  justify-content: flex-start;
+  background: transparent;
+}
+
+/*
+ * A fixed full-viewport layer for the game. It must always have real pixel
+ * size even when hidden: Phaser's Scale.RESIZE reads the parent box, and a
+ * zero-sized parent collapses the WebGL drawing buffer to 0x0, which fails
+ * framebuffer creation and leaves the renderer blank for the whole session.
+ */
+.app__game {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.app__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * The canvas stays mounted while the map is open, because tearing it down would
+ * throw away the Phaser game and everything it holds. It is made invisible and
+ * non-interactive instead of display:none — visibility keeps the layout box, so
+ * the Phaser parent always measures a real viewport and the render loop stop in
+ * GameBridge is what actually hides the cost.
+ */
+.app__game--hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------- shared controls */
+
+/*
+ * The two button styles every screen uses.
+ *
+ * Primary is the one action a screen is really about; secondary is everything else.
+ * Both are large enough to tap on a phone and both give hover and active feedback,
+ * which is what makes them work for mouse and touch alike.
+ */
+.menu-button {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  font-family: var(--font-display);
+  font-size: calc(16px * var(--ui-scale));
+  font-weight: 800;
+  letter-spacing: var(--letter-spacing-label);
+  text-align: center;
+  color: var(--text);
+  background-color: var(--panel-raised);
+  border: 2px solid var(--panel-line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 120ms ease, border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.menu-button:hover {
+  border-color: var(--accent);
+  background-color: #3a2b72;
+}
+
+.menu-button:active {
+  transform: scale(0.97);
+}
+
+.menu-button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.menu-button--primary {
+  color: var(--bg);
+  background-color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: var(--glow-gold);
+}
+
+.menu-button--primary:hover {
+  background-color: var(--accent-bright);
+  border-color: var(--accent-bright);
+}
+
+/*
+ * A small quiet button, for the shell's in-game MENU and similar secondary
+ * actions. Same focus and hover vocabulary as .menu-button, smaller everywhere.
+ */
+.text-button {
+  padding: 8px 18px;
+  font-family: var(--font-display);
+  font-size: calc(12px * var(--ui-scale));
+  font-weight: 800;
+  letter-spacing: var(--letter-spacing-label);
+  color: var(--muted);
+  background-color: var(--panel);
+  border: 1.5px solid var(--panel-line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background-color 120ms ease;
+}
+
+.text-button:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.text-button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Primary action text button: the map header back-link uses this voice. */
+.text-button--primary {
+  color: var(--bg);
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+.text-button--primary:hover {
+  background-color: var(--accent-bright);
+  border-color: var(--accent-bright);
+  color: var(--bg);
+}
+
+.text-button--secondary {
+  color: var(--text);
+  background-color: rgba(47, 35, 92, 0.8);
+  border-color: rgba(165, 157, 196, 0.45);
+}
+
+.text-button--secondary:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/*
+ * Label eyebrow: the kind-setting, letter-spaced small caps line that appears
+ * above titles on the menu and in the level sheet. One class so both screens
+ * say it the same way.
+ */
+.eyebrow {
+  margin: 0;
+  font-size: calc(12px * var(--ui-scale));
+  letter-spacing: var(--letter-spacing-eyebrow);
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/*
+ * Focus ring utility for round and irregular controls where an outline hugs a
+ * non-rectangular shape badly. The node uses this instead of outline.
+ */
+.focus-visible-ring:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ----------------------------------------------------- website top navbar */
+
+.site-navbar {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  max-width: 980px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 18px;
+  background: rgba(24, 15, 52, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-pill);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.site-navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.site-navbar__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+  color: var(--bg);
+  background: linear-gradient(135deg, var(--accent-bright), var(--accent));
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(255, 209, 102, 0.5);
+}
+
+.site-navbar__name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+
+.site-navbar__links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.site-navbar__link {
+  padding: 6px 12px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.site-navbar__link:hover {
+  color: var(--accent);
+  background: rgba(255, 209, 102, 0.1);
+  border-color: rgba(255, 209, 102, 0.3);
+}
+
+.site-navbar__sound {
+  padding: 6px 12px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  color: var(--success);
+  background: rgba(123, 224, 208, 0.12);
+  border: 1px solid rgba(123, 224, 208, 0.35);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.site-navbar__sound:hover {
+  background: rgba(123, 224, 208, 0.22);
+  border-color: var(--success);
+}
+
+/* -------------------------------------------------------------- main menu */
+
+/*
+ * The menu is a full-viewport stage over the cosmic concert artwork.
+ */
+.main-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 20px;
+  overflow-y: auto;
+  background:
+    radial-gradient(85% 55% at 50% 28%, rgba(255, 209, 102, 0.12) 0%, rgba(255, 209, 102, 0) 62%),
+    radial-gradient(70% 50% at 20% 80%, rgba(199, 146, 234, 0.15) 0%, transparent 65%),
+    radial-gradient(70% 50% at 82% 75%, rgba(74, 158, 255, 0.14) 0%, transparent 65%),
+    linear-gradient(180deg, rgba(15, 7, 34, 0.72) 0%, rgba(22, 11, 48, 0.58) 45%, rgba(12, 6, 28, 0.9) 100%),
+    url('/background-map.png');
+  background-size: cover;
+  background-position: center;
+}
+
+/*
+ * Floating notes behind the content.
+ *
+ * Pure CSS: six spans on keyframe loops, tinted from the chord-voice tokens so
+ * the decoration is literally the game's palette. They sit behind everything
+ * and never compete with the buttons.
+ */
+.main-menu__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.main-menu__note {
+  position: absolute;
+  opacity: 0.2;
+  animation: note-float 9s ease-in-out infinite;
+}
+
+.main-menu__note--1 { left: 8%;  top: 18%; font-size: 42px; color: var(--note-c); animation-delay: 0s; }
+.main-menu__note--2 { left: 82%; top: 14%; font-size: 32px; color: var(--note-g); animation-delay: 1.4s; }
+.main-menu__note--3 { left: 14%; top: 72%; font-size: 28px; color: var(--note-a); animation-delay: 2.8s; }
+.main-menu__note--4 { left: 78%; top: 68%; font-size: 48px; color: var(--note-f); animation-delay: 4.2s; }
+.main-menu__note--5 { left: 50%; top: 10%; font-size: 24px; color: var(--note-e); animation-delay: 5.6s; }
+.main-menu__note--6 { left: 30%; top: 86%; font-size: 34px; color: var(--note-d); animation-delay: 7s; }
+
+@keyframes note-float {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50%      { transform: translateY(-16px) rotate(6deg); }
+}
+
+.main-menu__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 500px;
+  gap: 18px;
+  margin: auto;
+  padding: 12px 0;
+  text-align: center;
+}
+
+/* --- hero: kicker, title, tagline --- */
+
+.main-menu__hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  animation: rise 500ms ease both;
+}
+
+.main-menu__kicker {
+  margin: 0;
+  padding: 4px 14px;
+  font-family: var(--font-display);
+  font-size: calc(11px * var(--ui-scale));
+  font-weight: 800;
+  letter-spacing: 3.5px;
+  color: var(--accent-bright);
+  background: rgba(255, 209, 102, 0.12);
+  border: 1px solid rgba(255, 209, 102, 0.3);
+  border-radius: var(--radius-pill);
+}
+
+.main-menu__title {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-display);
+  font-size: clamp(44px, 11vw, 74px);
+  line-height: 0.92;
+  font-weight: 900;
+  letter-spacing: 6px;
+  text-indent: 6px;
+}
+
+.main-menu__title-line {
+  display: block;
+  color: var(--text);
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), 0 0 26px rgba(255, 255, 255, 0.16);
+}
+
+/* CHORD: gold gradient fill; drop-shadow because text-shadow would paint
+ * through a clipped background. */
+.main-menu__title-line--chord {
+  background-image: linear-gradient(180deg, #fff5d6 0%, var(--accent) 55%, #e2a83e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 18px rgba(255, 209, 102, 0.4));
+}
+
+/* The little note riding the wordmark: teal (note A), the magic accent. */
+.main-menu__title-note {
+  font-size: 0.4em;
+  color: var(--note-a);
+  vertical-align: super;
+  margin-left: 6px;
+  letter-spacing: 0;
+  filter: drop-shadow(0 0 10px rgba(123, 224, 208, 0.6));
+}
+
+.main-menu__tagline {
+  margin: 2px 0 0;
+  font-family: var(--font-display);
+  font-size: calc(13px * var(--ui-scale));
+  font-weight: 800;
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--accent);
+}
+
+/* --- interactive 7-note preview strip on hero --- */
+
+.hero-piano-strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.hero-piano-strip__keys {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(18, 10, 42, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-pill);
+  backdrop-filter: blur(8px);
+}
+
+.hero-note-pill {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 900;
+  color: #ffffff;
+  background: rgba(35, 25, 74, 0.9);
+  border: 2px solid var(--pill-color, var(--accent));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--pill-color, #ffd166) 45%, transparent);
+  cursor: pointer;
+  transition: transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1), background-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.hero-note-pill:hover,
+.hero-note-pill--active {
+  transform: translateY(-3px) scale(1.1);
+  background: var(--pill-color, var(--accent));
+  color: #0f0722;
+  box-shadow: 0 0 20px var(--pill-color, var(--accent));
+}
+
+.hero-piano-strip__hint {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+/* --- actions --- */
+
+.main-menu__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 380px;
+  animation: rise 380ms ease 140ms both;
+}
+
+/*
+ * The hero CTA doubles as the continue card: what it says (CONTINUE, the level,
+ * the best score) comes from the real campaign snapshot. Dark text on gold for
+ * contrast; the gradient and glow carry the "premium" weight.
+ */
+.menu-button--hero {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 16px 22px 15px;
+  background-image: linear-gradient(180deg, var(--accent-bright) 0%, var(--accent) 55%, #eab54e 100%);
+  border-radius: 16px;
+  box-shadow: var(--glow-gold), var(--shadow);
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+.menu-button--hero:hover {
+  background-color: var(--accent);
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow: 0 0 32px rgba(255, 209, 102, 0.55), var(--shadow);
+}
+
+.menu-button--hero:active {
+  transform: translateY(0) scale(0.98);
+  filter: brightness(0.97);
+}
+
+.menu-button__kicker {
+  font-size: calc(11px * var(--ui-scale));
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: rgba(15, 7, 34, 0.72);
+}
+
+.menu-button__headline {
+  font-size: calc(19px * var(--ui-scale));
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--bg);
+}
+
+.menu-button__sub {
+  font-size: calc(12px * var(--ui-scale));
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  color: rgba(15, 7, 34, 0.72);
+}
+
+.main-menu__secondary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Quiet glass pair for everything that is not the one action. */
+.menu-button--secondary {
+  padding: 12px 10px;
+  font-size: calc(12px * var(--ui-scale));
+  color: var(--text);
+  background-color: rgba(35, 25, 74, 0.78);
+  border-color: rgba(165, 157, 196, 0.4);
+  backdrop-filter: blur(8px);
+}
+
+/* Staggered entrance: each secondary button a beat after the hero block. */
+.main-menu__secondary .menu-button:nth-child(1) { animation: rise 380ms ease 220ms both; }
+.main-menu__secondary .menu-button:nth-child(2) { animation: rise 380ms ease 280ms both; }
+.main-menu__secondary .menu-button:nth-child(3) { animation: rise 380ms ease 340ms both; }
+.main-menu__secondary .menu-button:nth-child(4) { animation: rise 380ms ease 400ms both; }
+
+/* --- progression stats ribbon --- */
+
+.main-menu__stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  max-width: 380px;
+  padding: 12px 16px;
+  background: rgba(24, 15, 52, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  animation: rise 380ms ease 440ms both;
+}
+
+.main-menu__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.main-menu__stat-value {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.main-menu__stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+}
+
+.main-menu__stat-divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* --- progression footer: real campaign facts only --- */
+
+.main-menu__status {
+  margin: 0;
+  font-size: calc(11px * var(--ui-scale));
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: var(--muted);
+  animation: rise 380ms ease 480ms both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Short landscape phones: tighten the stage instead of scrolling blindly. */
+@media (max-height: 620px) {
+  .main-menu__content {
+    gap: 10px;
+  }
+
+  .main-menu__title {
+    font-size: clamp(32px, 8vh, 50px);
+  }
+
+  .menu-button--hero {
+    padding: 10px 20px 9px;
+  }
+
+  .hero-piano-strip {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------- level map header */
+
+.adv-campaign-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 10px 16px 12px;
+  text-align: center;
+  background: linear-gradient(rgba(15, 7, 34, 0.96), rgba(15, 7, 34, 0.72));
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 209, 102, 0.14);
+}
+
+.adv-campaign-header__title-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.adv-campaign-header__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(24px, 5vw, 38px);
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: var(--text);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+.adv-campaign-header__campaign {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(11px, 2.5vw, 13px);
+  letter-spacing: 3px;
+  color: var(--accent);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.adv-campaign-header__badges {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.adv-campaign-header__progress {
+  margin: 0;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  color: var(--success);
+  background: rgba(123, 224, 208, 0.12);
+  border: 1px solid rgba(123, 224, 208, 0.35);
+  border-radius: var(--radius-pill);
+}
+
+.adv-campaign-header__stars {
+  margin: 0;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  background: rgba(255, 209, 102, 0.14);
+  border: 1px solid rgba(255, 209, 102, 0.38);
+  border-radius: var(--radius-pill);
+}
+
+.level-map__header-row {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 12px 16px 0;
+}
+
+.level-map__back {
+  flex-shrink: 0;
+}
+
+.level-map__locked-hint {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: min(520px, calc(100% - 32px));
+  margin: 10px auto 0;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-bright);
+  background: rgba(45, 22, 66, 0.92);
+  border: 1.5px solid var(--danger);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  animation: rise 200ms ease both;
+}
+
+.level-map__locked-dismiss {
+  padding: 2px 8px;
+  font-size: 13px;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.level-map__locked-dismiss:hover {
+  color: var(--text);
+}
+
+/* -------------------------------------------------------------- level map */
+
+.level-map {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-raised);
+  background-image:
+    linear-gradient(180deg, rgba(15, 7, 34, 0.55), rgba(15, 7, 34, 0.25) 40%, rgba(15, 7, 34, 0.7)),
+    url('/background-map.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/*
+ * The scrollable world the level buttons sit in.
+ *
+ * flex-shrink: 0 is load-bearing: this sits in the fixed-height column flex of
+ * .level-map, and with nothing in flow (every child is absolutely positioned)
+ * its min-content height is zero, so the default shrink would squeeze the list
+ * into the leftover viewport space instead of overflowing into a scroll.
+ */
+.adv-world {
+  position: relative;
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  flex-shrink: 0;
+  overflow-x: clip;
+}
+
+/*
+ * The winding trail: an SVG stretched over the world box. Node positions are
+ * percentages of that box, which is exactly the viewBox coordinate space;
+ * non-scaling-stroke keeps stroke widths even though the box is stretched.
+ */
+.adv-trail {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Level path glow: subtle gold core with gentle outline */
+.adv-path-glow {
+  fill: none;
+  stroke: rgba(255, 209, 102, 0.35);
+  stroke-width: 14;
+  stroke-linecap: round;
+  filter: drop-shadow(0 2px 8px rgba(255, 209, 102, 0.25));
+}
+
+/* Path core: solid gold for primary readability */
+.adv-path-core {
+  fill: none;
+  stroke: rgba(255, 209, 102, 0.55);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 12 8;
+}
+
+/* Path progress indicator - shows progress along the path */
+.adv-path-progress {
+  fill: none;
+  stroke: var(--success);
+  stroke-width: 5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 8px rgba(123, 224, 208, 0.6));
+}
+
+/* ------------------------------------------------------------ adventure nodes */
+
+/*
+ * Circular level nodes on the winding path. Absolutely positioned by the
+ * component from the position table; the translate centres each node on its
+ * point on screens of any width.
+ */
+.adv-node {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  width: 68px;
+  height: 68px;
+  padding: 0;
+  font-family: var(--font-display);
+  background: none;
+  border: none;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.adv-node__face {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: calc(22px * var(--ui-scale));
+  font-weight: 800;
+  color: var(--text);
+  background-color: var(--glass-bg);
+  border: 2.5px solid var(--glass-border);
+  border-radius: var(--radius-node);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  transition:
+    transform 140ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 200ms ease;
+  position: relative;
+  overflow: visible;
+}
+
+.adv-node:hover .adv-node__face {
+  transform: scale(1.07);
+  border-color: var(--glass-border-hover);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.5),
+    0 0 16px rgba(255, 209, 102, 0.35);
+}
+
+.adv-node:active .adv-node__face {
+  transform: scale(0.96);
+  transition: transform 60ms ease;
+}
+
+.adv-node:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Unlocked frontier: gold ring and the current-pulse below. */
+.adv-node--unlocked .adv-node__face {
+  border-color: rgba(255, 209, 102, 0.75);
+  background-color: var(--accent-soft);
+}
+
+/* Completed nodes: bright teal ring */
+.adv-node--completed .adv-node__face {
+  border-color: var(--note-a);
+  background-color: rgba(123, 224, 208, 0.2);
+}
+
+/* Locked nodes */
+.adv-node--locked {
+  cursor: pointer;
+}
+
+.adv-node--locked .adv-node__face {
+  color: var(--muted);
+  background-color: rgba(15, 7, 34, 0.65);
+  border-color: rgba(255, 164, 92, 0.42);
+}
+
+/* Selected: high-contrast outline so focus is unambiguous. */
+.adv-node--selected .adv-node__face {
+  border-color: #ffffff;
+  background-color: var(--glass-bg-hover);
+  box-shadow: 0 0 22px rgba(255, 255, 255, 0.45);
+}
+
+/* The player's frontier node carries the pulse */
+.adv-node--current .adv-node__face {
+  border-color: var(--accent);
+  background-color: var(--accent-soft);
+  animation: node-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes node-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(255, 209, 102, 0);
+  }
+}
+
+/*
+ * Node decorations, anchored to the circle: the completion check, the star ribbon,
+ * the PLAY tag on the frontier, the level name caption, and the lock icon.
+ */
+.adv-node__badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--bg);
+  background-color: var(--success);
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  animation: badge-pop 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes badge-pop {
+  0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+  50% { transform: scale(1.2) rotate(10deg); }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.adv-node__stars {
+  position: absolute;
+  left: 50%;
+  top: -18px;
+  transform: translateX(-50%);
+  padding: 1px 7px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--accent);
+  background: rgba(15, 7, 34, 0.88);
+  border: 1px solid rgba(255, 209, 102, 0.45);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.adv-node__play-tag {
+  position: absolute;
+  left: 50%;
+  top: -18px;
+  transform: translateX(-50%);
+  padding: 3px 10px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--bg);
+  background: linear-gradient(180deg, var(--accent-bright), var(--accent));
+  border-radius: var(--radius-pill);
+  box-shadow: var(--glow-gold), 0 2px 8px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  white-space: nowrap;
+  animation: play-tag-bounce 1.5s ease-in-out infinite;
+}
+
+@keyframes play-tag-bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-3px); }
+}
+
+.adv-node__caption {
+  position: absolute;
+  left: 50%;
+  bottom: -22px;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text);
+  background: rgba(15, 7, 34, 0.78);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.adv-node__lock-icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(22px * var(--ui-scale));
+  pointer-events: none;
+  animation: lock-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes lock-pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+/* ------------------------------------------------------------ info sheet */
+
+/*
+ * Bottom sheet: slides up from the bottom when a level is selected.
+ */
+.adv-sheet {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  z-index: 40;
+  width: min(430px, calc(100% - 24px));
+  max-height: 78vh;
+  overflow-y: auto;
+  transform: translateX(-50%);
+  animation: adv-sheet-rise 300ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes adv-sheet-rise {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.adv-sheet__musical-accent {
+  display: block;
+  text-align: center;
+  margin: 4px 0 8px;
+  font-size: calc(22px * var(--ui-scale));
+  color: var(--note-a);
+  opacity: 0.6;
+}
+
+.adv-sheet__stars {
+  text-align: center;
+  margin: 4px 0 10px;
+  font-size: 22px;
+  letter-spacing: 4px;
+  color: var(--accent);
+  filter: drop-shadow(0 0 10px rgba(255, 209, 102, 0.5));
+}
+
+.adv-sheet__card {
+  position: relative;
+  padding: 20px 22px 22px;
+  background: linear-gradient(180deg, rgba(35, 23, 74, 0.94) 0%, rgba(24, 15, 54, 0.97) 100%);
+  border: 1.5px solid var(--glass-border);
+  border-radius: 20px;
+  backdrop-filter: blur(14px);
+  box-shadow:
+    var(--shadow-deep),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 0 40px rgba(255, 209, 102, 0.1);
+}
+
+.adv-sheet__close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  font-size: calc(15px * var(--ui-scale));
+  color: var(--muted);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-node);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 160ms ease;
+}
+
+.adv-sheet__close:hover {
+  color: var(--text);
+  background: var(--glass-bg-hover);
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+
+.adv-sheet__eyebrow {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: calc(11px * var(--ui-scale));
+  letter-spacing: 2.5px;
+  color: var(--accent);
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.adv-sheet__name {
+  margin: 4px 0 6px;
+  padding-right: 40px;
+  font-family: var(--font-display);
+  font-size: calc(22px * var(--ui-scale));
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.adv-sheet__desc {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.adv-sheet__section {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-display);
+  font-size: calc(11px * var(--ui-scale));
+  letter-spacing: var(--letter-spacing-label);
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.adv-sheet__objectives {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.adv-sheet__objectives li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  font-size: calc(14px * var(--ui-scale));
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.adv-sheet__icon {
+  width: 20px;
+  color: var(--success);
+  text-align: center;
+  font-size: calc(15px * var(--ui-scale));
+  flex-shrink: 0;
+}
+
+.adv-sheet__label {
+  flex: 1;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.adv-sheet__value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--text);
+  font-size: calc(15px * var(--ui-scale));
+}
+
+.adv-sheet__milestones {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(255, 209, 102, 0.08);
+  border: 1px solid rgba(255, 209, 102, 0.22);
+  border-radius: var(--radius-sm);
+}
+
+.adv-sheet__best {
+  margin: 0 0 14px;
+  padding: 8px 12px;
+  font-size: calc(12px * var(--ui-scale));
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--success);
+  background: rgba(123, 224, 208, 0.12);
+  border: 1px solid rgba(123, 224, 208, 0.25);
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.adv-sheet__best::before {
+  content: '★';
+  font-size: calc(14px * var(--ui-scale));
+  filter: drop-shadow(0 0 6px var(--success));
+}
+
+.adv-sheet__play {
+  width: 100%;
+  padding: 14px 20px;
+  font-family: var(--font-display);
+  font-size: calc(16px * var(--ui-scale));
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--bg);
+  background: linear-gradient(180deg, var(--accent-bright), var(--accent) 55%, #eab54e);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: var(--glow-gold), var(--shadow);
+  transition: all 120ms ease;
+  text-transform: uppercase;
+}
+
+.adv-sheet__play:hover {
+  background: linear-gradient(180deg, var(--accent), #eab54e);
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(255, 209, 102, 0.5), var(--shadow);
+}
+
+.adv-sheet__play:active {
+  transform: translateY(0) scale(0.98);
+  filter: brightness(0.97);
+}
+
+.adv-sheet__play:disabled {
+  color: var(--muted);
+  background: rgba(47, 47, 85, 0.5);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* ---------------------------------------------------------------- badges */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  font-size: calc(12px * var(--ui-scale));
+  font-weight: bold;
+  letter-spacing: var(--letter-spacing-label);
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid rgba(255, 209, 102, 0.4);
+  border-radius: var(--radius-pill);
+}
+
+.badge--success {
+  color: var(--success);
+  background: rgba(123, 224, 208, 0.14);
+  border-color: rgba(123, 224, 208, 0.45);
+}
+
+.badge--danger {
+  color: var(--danger);
+  background: rgba(255, 143, 171, 0.14);
+  border-color: rgba(255, 143, 171, 0.45);
+}
+
+/* ------------------------------------------------------------ progress bar */
+
+.progress {
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
+  background: rgba(15, 15, 26, 0.55);
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius-pill);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.progress__fill {
+  height: 100%;
+  min-width: 10px;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(255, 209, 102, 0.55);
+  transition: width 240ms ease;
+}
+
+.progress__fill--success {
+  background: var(--success);
+  box-shadow: 0 0 10px rgba(123, 224, 208, 0.55);
+}
+
+.progress__fill--danger {
+  background: var(--danger);
+  box-shadow: 0 0 10px rgba(255, 143, 171, 0.55);
+}
+
+/* ----------------------------------------------------------- glass panels */
+
+.glass-card {
+  background-color: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-deep);
+}
+
+/* -------------------------------------------------------------- settings */
+
+.settings {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  background-color: rgba(8, 5, 18, 0.8);
+  backdrop-filter: blur(6px);
+}
+
+.settings__panel {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px;
+  background-color: var(--panel);
+  border: 2px solid var(--accent);
+  border-radius: 18px;
+  box-shadow: var(--shadow-deep);
+}
+
+.settings__header {
+  display: block;
+}
+
+.settings__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: calc(24px * var(--ui-scale));
+  font-weight: 900;
+  letter-spacing: var(--letter-spacing-wide);
+  text-align: center;
+  color: var(--accent);
+}
+
+.settings__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.settings__label {
+  flex: 1;
+  font-size: calc(13px * var(--ui-scale));
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+}
+
+.settings__value {
+  min-width: 48px;
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: calc(14px * var(--ui-scale));
+  font-weight: 800;
+  color: var(--text);
+}
+
+/* A checkbox styled as a switch, but still a real checkbox for keyboard users. */
+.settings__switch {
+  width: 46px;
+  height: 26px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.settings__slider {
+  flex: 1;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.settings__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings__action-btn {
+  width: 100%;
+  padding: 11px 14px;
+  text-align: center;
+}
+
+.settings__action-btn--danger {
+  color: #ffffff;
+  background-color: rgba(255, 92, 138, 0.25);
+  border-color: var(--danger);
+}
+
+.settings__action-btn--danger:hover {
+  color: #ffffff;
+  background-color: rgba(255, 92, 138, 0.45);
+  border-color: var(--danger);
+}
+
+.settings__close {
+  margin-top: var(--space-1);
+}
+
+/* ------------------------------------------- chord codex & guide modal */
+
+.codex-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background-color: rgba(8, 5, 18, 0.82);
+  backdrop-filter: blur(8px);
+  animation: rise 220ms ease both;
+}
+
+.codex-modal__panel {
+  width: min(760px, 100%);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(38, 25, 80, 0.96) 0%, rgba(22, 14, 48, 0.98) 100%);
+  border: 1.5px solid rgba(255, 209, 102, 0.45);
+  border-radius: 22px;
+  box-shadow: var(--shadow-deep), 0 0 40px rgba(255, 209, 102, 0.12);
+  overflow: hidden;
+}
+
+.codex-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.codex-modal__eyebrow {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--accent);
+}
+
+.codex-modal__title {
+  margin: 2px 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(20px, 4vw, 26px);
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: var(--text);
+}
+
+.codex-modal__close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 16px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.codex-modal__close:hover {
+  color: var(--text);
+  border-color: var(--accent);
+  transform: scale(1.06);
+}
+
+.codex-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 24px;
+  background: rgba(12, 7, 28, 0.45);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.codex-tab {
+  flex: 1;
+  padding: 10px 14px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.codex-tab:hover {
+  color: var(--text);
+  border-color: rgba(255, 209, 102, 0.35);
+}
+
+.codex-tab--active {
+  color: var(--bg);
+  background: linear-gradient(180deg, var(--accent-bright), var(--accent));
+  border-color: var(--accent);
+  box-shadow: 0 0 16px rgba(255, 209, 102, 0.35);
+}
+
+.codex-modal__body {
+  padding: 18px 24px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.codex-section__title {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--accent);
+}
+
+.codex-section__desc {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.codex-notes-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.codex-note-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 6px;
+  background: rgba(18, 10, 42, 0.8);
+  border: 2px solid var(--tile-color, var(--accent));
+  border-radius: 12px;
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+}
+
+.codex-note-tile:hover,
+.codex-note-tile--active {
+  transform: translateY(-3px);
+  background: color-mix(in srgb, var(--tile-color, #ffd166) 25%, #160c30);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--tile-color, #ffd166) 50%, transparent);
+}
+
+.codex-note-tile__letter {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--tile-color, var(--text));
+}
+
+.codex-note-tile__hz {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.codex-chord-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+  gap: 10px;
+}
+
+.codex-chord-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.codex-chord-card:hover,
+.codex-chord-card--active {
+  transform: translateY(-2px);
+  background: rgba(255, 209, 102, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.codex-chord-card__top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.codex-chord-card__degree {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--accent);
+}
+
+.codex-chord-card__quality {
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  border-radius: var(--radius-pill);
+}
+
+.codex-chord-card__quality--major {
+  color: var(--accent);
+  background: rgba(255, 209, 102, 0.15);
+}
+
+.codex-chord-card__quality--minor {
+  color: var(--success);
+  background: rgba(123, 224, 208, 0.15);
+}
+
+.codex-chord-card__quality--diminished {
+  color: var(--danger);
+  background: rgba(255, 143, 171, 0.15);
+}
+
+.codex-chord-card__name {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.codex-chord-card__notes {
+  display: flex;
+  gap: 6px;
+}
+
+.codex-chord-card__note-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 900;
+  color: #0f0722;
+}
+
+.codex-chord-card__play-hint {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: var(--muted);
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.guide-card {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+}
+
+.guide-card__icon {
+  font-size: 24px;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.guide-card__title {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.guide-card__text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.guide-shortcuts {
+  padding: 14px 16px;
+  background: rgba(123, 224, 208, 0.08);
+  border: 1px solid rgba(123, 224, 208, 0.25);
+  border-radius: 14px;
+}
+
+.guide-shortcuts__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.guide-shortcuts__list kbd {
+  display: inline-block;
+  padding: 2px 7px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--bg);
+  background: var(--accent);
+  border-radius: 5px;
+  margin-right: 4px;
+}
+
+/* ------------------------------------------------------- shell small buttons */
+
+/*
+ * The gameplay dock: the shell's controls over the canvas, parked below the
+ * board instead of floating on top of it. The Phaser scene reserves the same
+ * height at the bottom of the canvas (DOCK_RESERVE in GameScene), so the dock
+ * can never cover a tile, and the reserve shrinks with the dock's own media
+ * query at the same viewport height.
+ */
+.app__dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(
+    180deg,
+    rgba(6, 21, 36, 0) 0%,
+    rgba(6, 21, 36, 0.72) 45%,
+    rgba(4, 13, 23, 0.94) 100%
+  );
+  border-top: 1px solid rgba(123, 224, 208, 0.16);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  pointer-events: none;
+}
+
+.app__dock-inner {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  width: min(620px, 100%);
+  pointer-events: auto;
+}
+
+.app__dock-button {
+  flex: 1;
+  min-width: 78px;
+  min-height: 46px;
+  padding: 8px 14px;
+  font-family: var(--font-display);
+  font-size: calc(13px * var(--ui-scale));
+  font-weight: 800;
+  letter-spacing: var(--letter-spacing-label);
+  color: var(--text);
+  background: linear-gradient(180deg, rgba(47, 35, 92, 0.92), rgba(32, 22, 68, 0.92));
+  border: 1.5px solid rgba(165, 157, 196, 0.5);
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, color 120ms ease,
+    filter 120ms ease;
+}
+
+.app__dock-button:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.app__dock-button:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.app__dock-button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.app__dock-button--primary {
+  color: var(--bg);
+  background: linear-gradient(180deg, var(--accent-bright) 0%, var(--accent) 60%, #eab54e 100%);
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: var(--glow-gold), 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.app__dock-button--primary:hover {
+  color: var(--bg);
+  filter: brightness(1.05);
+}
+
+/*
+ * Short viewports compact the dock. The media query must stay in step with the
+ * scene's short dock reserve (SHORT_VIEWPORT), or the board would slide under
+ * the buttons on a landscape phone.
+ */
+@media (max-height: 560px) {
+  .app__dock {
+    padding-top: 6px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app__dock-button {
+    min-height: 42px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+}
+
+.app__error {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: var(--z-error);
+  padding: var(--space-3) 18px;
+  font-size: calc(14px * var(--ui-scale));
+  color: var(--text);
+  background-color: var(--danger);
+  border-radius: var(--radius-sm);
+}
+
+/* --------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .main-menu__note,
+  .main-menu__hero,
+  .main-menu__actions,
+  .main-menu__secondary .menu-button,
+  .main-menu__status,
+  .main-menu__stats-bar,
+  .adv-node--current .adv-node__face,
+  .adv-sheet,
+  .codex-modal {
+    animation: none;
+  }
+
+  .menu-button,
+  .text-button,
+  .adv-node__face,
+  .progress__fill {
+    transition: none;
+  }
+}
+
+/* --------------------------------------------------------- narrow screens */
+
+@media (max-width: 720px) {
+  :root {
+    --ui-scale: 0.92;
+  }
+
+  .adv-node {
+    width: 54px;
+    height: 54px;
+  }
+
+  .site-navbar__name {
+    display: none;
+  }
+
+  .codex-notes-row {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .adv-node {
+    width: 48px;
+    height: 48px;
+  }
+
+  .app__dock-button {
+    min-width: 64px;
+    padding: 8px 8px;
+    font-size: 11px;
+  }
+}

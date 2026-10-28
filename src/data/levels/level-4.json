@@ -1,0 +1,10 @@
+{
+  "id": 4,
+  "name": "Chord Rush",
+  "description": "Chain chords before your moves run out.",
+  "boardWidth": 8,
+  "boardHeight": 8,
+  "moveLimit": 30,
+  "scoreTarget": 4500,
+  "chordTarget": 4
+}

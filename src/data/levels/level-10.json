@@ -1,0 +1,11 @@
+{
+  "id": 10,
+  "name": "Chord Crush Finale",
+  "description": "Complete the ultimate challenge.",
+  "boardWidth": 8,
+  "boardHeight": 8,
+  "moveLimit": 35,
+  "scoreTarget": 12000,
+  "chordTarget": 7,
+  "specialTileTarget": 4
+}

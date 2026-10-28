@@ -1,0 +1,11 @@
+{
+  "id": 2,
+  "name": "Major Progress",
+  "description": "Build your first major chords.",
+  "boardWidth": 8,
+  "boardHeight": 8,
+  "moveLimit": 25,
+  "scoreTarget": 2000,
+  "chordTarget": 2,
+  "preferredChordQuality": "major"
+}

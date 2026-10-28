@@ -1,0 +1,11 @@
+{
+  "id": 3,
+  "name": "Minor Colors",
+  "description": "Explore the darker sound of minor chords.",
+  "boardWidth": 8,
+  "boardHeight": 8,
+  "moveLimit": 30,
+  "scoreTarget": 3000,
+  "chordTarget": 3,
+  "preferredChordQuality": "minor"
+}

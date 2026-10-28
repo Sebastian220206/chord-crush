@@ -1,0 +1,10 @@
+{
+  "id": 5,
+  "name": "Special Power",
+  "description": "Activate special tiles to gain power.",
+  "boardWidth": 8,
+  "boardHeight": 8,
+  "moveLimit": 30,
+  "scoreTarget": 5000,
+  "specialTileTarget": 2
+}
