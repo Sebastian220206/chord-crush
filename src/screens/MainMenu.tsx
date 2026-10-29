@@ -189,8 +189,7 @@ export function MainMenu({
   const handleStartAdventure = (): void => {
     beginTurn();
     audio.playChord(['C', 'E', 'G']);
-    if (onPlay) onPlay(currentId);
-    else onLevels();
+    onLevels();
   };
 
   const handleLearnMore = (): void => {
